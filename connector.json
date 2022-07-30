@@ -1,0 +1,13 @@
+$ curl -XPOST -H 'Content-type:application/json' 'localhost:8083/connectors' -d '{
+"name" : "second_es_sink",
+"config" : {
+"connector.class" : "io.confluent.connect.elasticsearch.ElasticsearchSinkConnector",
+"tasks.max" : "1",
+"topics" : "logs",
+"topic.index.map" : "logs:logs_index",
+"connection.url" : "http://localhost:9200",
+"type.name" : "true",
+"key.ignore" : "true",
+"schema.ignore" : "true"
+}
+}'

@@ -1,0 +1,139 @@
+version: "3.0"
+
+services:
+  zookeeper-a-01:
+    image: confluentinc/cp-zookeeper:7.2.0-1-ubi8
+    container_name: zookeeper-a-01
+    hostname: zookeeper-a-01
+    restart: always
+    environment:
+      ZOOKEEPER_SERVER_ID: 1
+      ZOOKEEPER_CLIENT_PORT: "2181"
+      ZOOKEEPER_TICK_TIME: "2000"
+      ZOOKEEPER_SERVERS: "zookeeper-a-01:22888:23888"
+    ports:
+      - "2181:2181"
+
+  connect-a-01:
+    image: confluentinc/cp-kafka-connect:7.2.0-1-ubi8
+    container_name: connect-a-01
+    hostname: connect-a-01
+    command:
+      - bash
+      - -c
+      - |
+        # Install connector plugins
+        # This will by default install into /usr/share/confluent-hub-components/ so make
+        #  sure that this path is added to the plugin.path in the environment variables 
+        confluent-hub  install --no-prompt confluentinc/kafka-connect-elasticsearch:13.1.2
+        # Launch the Kafka Connect worker
+        /etc/confluent/docker/run &
+        # Don't exit
+        sleep infinity
+    depends_on:
+      - zookeeper-a-01
+      - kafka-a-01
+      #- sr-a-01
+    ports:
+      - "8083:8083"
+    environment:
+      CONNECT_BOOTSTRAP_SERVERS: "kafka-a-01:9092"
+      CONNECT_REST_PORT: 8083
+      CONNECT_GROUP_ID: compose-connect-group
+      CONNECT_CONFIG_STORAGE_TOPIC: docker-connect-configs
+      CONNECT_OFFSET_STORAGE_TOPIC: docker-connect-offsets
+      CONNECT_STATUS_STORAGE_TOPIC: docker-connect-status
+      CONNECT_KEY_CONVERTER: io.confluent.connect.avro.AvroConverter
+      CONNECT_KEY_CONVERTER_SCHEMA_REGISTRY_URL: 'http://sr-a-01:8081'
+      CONNECT_VALUE_CONVERTER: io.confluent.connect.avro.AvroConverter
+      CONNECT_VALUE_CONVERTER_SCHEMA_REGISTRY_URL: 'http://sr-a-01:8081'
+      CONNECT_INTERNAL_KEY_CONVERTER: "org.apache.kafka.connect.json.JsonConverter"
+      CONNECT_INTERNAL_VALUE_CONVERTER: "org.apache.kafka.connect.json.JsonConverter"
+      CONNECT_REST_ADVERTISED_HOST_NAME: "kafka-connect"
+      CONNECT_LOG4J_ROOT_LOGLEVEL: "INFO"
+      CONNECT_LOG4J_LOGGERS: "org.apache.kafka.connect.runtime.rest=WARN,org.reflections=ERROR"
+      CONNECT_CONFIG_STORAGE_REPLICATION_FACTOR: "1"
+      CONNECT_OFFSET_STORAGE_REPLICATION_FACTOR: "1"
+      CONNECT_STATUS_STORAGE_REPLICATION_FACTOR: "1"
+      CONNECT_PLUGIN_PATH: '/usr/share/java,/usr/share/confluent-hub-components/'
+
+
+  kafka-a-01:
+    image: confluentinc/cp-enterprise-kafka:7.2.0-1-ubi8
+    container_name: kafka-a-01
+    hostname: kafka-a-01
+    depends_on:
+      - zookeeper-a-01
+    ports:
+    # Exposes 29092 for external connections to the broker
+    # Use kafka-a-01:9092 for connections internal on the docker network
+    # See https://rmoff.net/2018/08/02/kafka-listeners-explained/ for details
+      - "29092:29092"
+    environment:
+      KAFKA_ZOOKEEPER_CONNECT: "zookeeper-a-01:2181"
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka-a-01:9092,PLAINTEXT_HOST://localhost:29092
+      KAFKA_BROKER_ID: 1
+      KAFKA_BROKER_RACK: "r1"
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_DELETE_TOPIC_ENABLE: "true"
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+      KAFKA_SCHEMA_REGISTRY_URL: "sr-a-01:8081"
+      KAFKA_JMX_PORT: 9991
+
+  sr-a-01:
+    image: confluentinc/cp-schema-registry:7.2.0-1-ubi8
+    container_name: sr-a-01
+    hostname: sr-a-01
+    restart: always
+    depends_on:
+      - zookeeper-a-01
+    environment:
+      SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: "kafka-a-01:9092"
+      SCHEMA_REGISTRY_INTER_INSTANCE_PROTOCOL: http
+      SCHEMA_REGISTRY_HOST_NAME: sr-a-01
+      SCHEMA_REGISTRY_LISTENERS: "http://0.0.0.0:8081"
+    ports:
+      - 8081:8081
+
+  es-a-01:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.3.2
+    container_name: es-a-01
+    hostname: es-a-01
+    restart: always
+    environment:
+      network.host: 0.0.0.0
+      #discovery.type: single-node
+      cluster.name: es-a-01
+      node.name: es-a-01
+      xpack.security.enabled: "false"
+      ES_JAVA_OPTS: "-Xms512m -Xmx512m"
+    ports:
+      - 9200:9200
+
+  kibana-a-01:
+    container_name: kibana-a-01
+    hostname: kibana-a-01
+    image: docker.elastic.co/kibana/kibana:8.3.2
+    restart: unless-stopped
+    environment:
+      xpack.security.enabled: "false"
+      ELASTICSEARCH_HOSTS: http://es-a-01:9200    # address of elasticsearch docker container which kibana will connect
+    ports:
+      - 5601:5601
+    depends_on:
+      - es-a-01
+    logging:
+      options:
+        max-size: "${DOCKER_LOGS_MAX_SIZE:-100M}"
+
+  logstash-a-01:
+    image: docker.elastic.co/logstash/logstash:8.3.2
+    container_name: logstash-a-01
+    hostname: logstash-a-01
+    depends_on:
+      - es-a-01
+    ports:
+      - 5044:5044
+    restart: unless-stopped
