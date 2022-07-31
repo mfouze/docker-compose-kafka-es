@@ -98,13 +98,15 @@ services:
       - 8081:8081
 
   es-a-01:
-    image: docker.elastic.co/elasticsearch/elasticsearch:8.3.2
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.13.4
     container_name: es-a-01
     hostname: es-a-01
     restart: always
+    networks:
+      - es-net
     environment:
       network.host: 0.0.0.0
-      #discovery.type: single-node
+      discovery.type: single-node
       cluster.name: es-a-01
       node.name: es-a-01
       xpack.security.enabled: "false"
@@ -115,11 +117,13 @@ services:
   kibana-a-01:
     container_name: kibana-a-01
     hostname: kibana-a-01
-    image: docker.elastic.co/kibana/kibana:8.3.2
+    image: docker.elastic.co/kibana/kibana:7.13.4
     restart: unless-stopped
     environment:
       xpack.security.enabled: "false"
       ELASTICSEARCH_HOSTS: http://es-a-01:9200    # address of elasticsearch docker container which kibana will connect
+    networks:
+      - es-net
     ports:
       - 5601:5601
     depends_on:
@@ -129,11 +133,17 @@ services:
         max-size: "${DOCKER_LOGS_MAX_SIZE:-100M}"
 
   logstash-a-01:
-    image: docker.elastic.co/logstash/logstash:8.3.2
+    image: docker.elastic.co/logstash/logstash:7.13.4
     container_name: logstash-a-01
     hostname: logstash-a-01
+    networks:
+      - es-net
     depends_on:
       - es-a-01
     ports:
       - 5044:5044
     restart: unless-stopped
+
+networks:
+  es-net:
+    driver: bridge
