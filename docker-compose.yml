@@ -57,7 +57,6 @@ services:
       CONNECT_STATUS_STORAGE_REPLICATION_FACTOR: "1"
       CONNECT_PLUGIN_PATH: '/usr/share/java,/usr/share/confluent-hub-components/'
 
-
   kafka-a-01:
     image: confluentinc/cp-enterprise-kafka:7.2.0-1-ubi8
     container_name: kafka-a-01
@@ -144,6 +143,17 @@ services:
       - 5044:5044
     restart: unless-stopped
 
+  nfs-a-01:
+    image: itsthenetwork/nfs-server-alpine:12
+    container_name: nfs-a-01
+    restart: unless-stopped
+    privileged: true
+    environment:
+      - SHARED_DIRECTORY=/data
+    #volumes:
+    #  - ./docker-volumes:/data
+    ports:
+      - 2049:2049
 networks:
   es-net:
     driver: bridge
