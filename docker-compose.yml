@@ -30,9 +30,6 @@ services:
       ZOOKEEPER_CLIENT_PORT: "22181"
       ZOOKEEPER_TICK_TIME: "2000"
       ZOOKEEPER_SERVERS: "zookeeper-a-01:12888:13888;zookeeper-a-02:22888:23888;zookeeper-a-03:32888:33888"
-    #network_mode: host
-    #extra_hosts:
-    #  - "zookeeper-a-02:127.0.0.1"
 
   zookeeper-a-03:
     image: confluentinc/cp-zookeeper:7.2.0-1-ubi8
@@ -47,9 +44,6 @@ services:
       ZOOKEEPER_CLIENT_PORT: "32181"
       ZOOKEEPER_TICK_TIME: "2000"
       ZOOKEEPER_SERVERS: "zookeeper-a-01:12888:13888;zookeeper-a-02:22888:23888;zookeeper-a-03:32888:33888"
-    #network_mode: host
-    #extra_hosts:
-    #  - "zookeeper-a-03:127.0.0.1"
 
   kafka-a-01:
     image: confluentinc/cp-enterprise-kafka:7.2.0-1-ubi8
@@ -65,6 +59,7 @@ services:
     # See https://rmoff.net/2018/08/02/kafka-listeners-explained/ for details
       - "19092:19092"
       - "9092:9092"
+      - "9991:9991"
     environment:
       KAFKA_ZOOKEEPER_CONNECT: "zookeeper-a-01:12181,zookeeper-a-02:22181,zookeeper-a-03:32181"
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT
@@ -77,9 +72,6 @@ services:
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
       KAFKA_SCHEMA_REGISTRY_URL: "sr-a-01:8081"
       KAFKA_JMX_PORT: 9991
-      KAFKA_JMX_OPTS: -Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false -Djava.rmi.server.hostname=kafka-a-01 -Dcom.sun.management.jmxremote.rmi.port=9991
-    #extra_hosts:
-    #  - "kafka-a-01:127.0.0.1"
 
   kafka-a-02:
     image: confluentinc/cp-enterprise-kafka:7.2.0-1-ubi8
@@ -95,6 +87,7 @@ services:
       # See https://rmoff.net/2018/08/02/kafka-listeners-explained/ for details
       - "29092:29092"
       - "9093:9093"
+      - "9992:9992"
     environment:
       KAFKA_ZOOKEEPER_CONNECT: "zookeeper-a-01:12181,zookeeper-a-02:22181,zookeeper-a-03:32181"
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT
@@ -106,10 +99,7 @@ services:
       KAFKA_DELETE_TOPIC_ENABLE: "true"
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
       KAFKA_SCHEMA_REGISTRY_URL: "sr-a-01:8081"
-      KAFKA_JMX_PORT: 9991
-      KAFKA_JMX_OPTS: -Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false -Djava.rmi.server.hostname=kafka-a-02 -Dcom.sun.management.jmxremote.rmi.port=9991
-    #extra_hosts:
-    #  - "kafka-a-02:127.0.0.1"
+      KAFKA_JMX_PORT: 9992
 
   kafka-a-03:
     image: confluentinc/cp-enterprise-kafka:7.2.0-1-ubi8
@@ -125,6 +115,7 @@ services:
       # See https://rmoff.net/2018/08/02/kafka-listeners-explained/ for details
       - "39092:39092"
       - "9094:9094"
+      - "9993:9993"
     environment:
       KAFKA_ZOOKEEPER_CONNECT: "zookeeper-a-01:12181,zookeeper-a-02:22181,zookeeper-a-03:32181"
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT
@@ -136,10 +127,7 @@ services:
       KAFKA_DELETE_TOPIC_ENABLE: "true"
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
       KAFKA_SCHEMA_REGISTRY_URL: "sr-a-01:8081"
-      KAFKA_JMX_PORT: 9991
-      KAFKA_JMX_OPTS: -Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false -Djava.rmi.server.hostname=kafka-a-03 -Dcom.sun.management.jmxremote.rmi.port=9991
-    #extra_hosts:
-    #  - "kafka-a-03:127.0.0.1"
+      KAFKA_JMX_PORT: 9993
 
   kafka-ui-a-01:
     image: provectuslabs/kafka-ui:v0.4.0
@@ -152,8 +140,8 @@ services:
       - zookeeper-a-01
       - zookeeper-a-02
       - zookeeper-a-03
-#      - connect-a-01
-#      - sr-a-01
+      - connect-a-01
+      - sr-a-01
     ports:
       - "8080:8080"
     environment:
@@ -274,4 +262,85 @@ services:
     ports:
       - 5044:5044
     restart: unless-stopped
+
+  grafana-a-01:
+    image: "grafana/grafana:9.1.0-ubuntu"
+    container_name: grafana-a-01
+    hostname: grafana-a-01
+    ports:
+      - "3000:3000"
+    environment:
+      GF_PATHS_DATA : /var/lib/grafana
+      GF_SECURITY_ADMIN_PASSWORD: kafka
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning
+      - ./grafana/dashboards:/var/lib/grafana/dashboards
+    depends_on:
+      - prometheus-a-01
+
+  prometheus-a-01:
+    image: "prom/prometheus:v2.34.0"
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./etc/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+    command: "--config.file=/etc/prometheus/prometheus.yml"
+    container_name: prometheus-a-01
+    hostname: prometheus-a-01
+
+  jmx-kafka-a-01:
+    image: "sscaling/jmx-prometheus-exporter"
+    ports:
+      - "5556:5556"
+    environment:
+      CONFIG_YML : "/etc/jmx_exporter/config.yml"
+      JVM_OPTS: -Xmx128M
+    volumes:
+      - ./etc/jmx_exporter/config_kafka01.yml:/etc/jmx_exporter/config.yml
+    container_name: jmx-kafka-a-01
+    hostname: jmx-kafka-a-01
+    depends_on:
+      - kafka-a-01
+
+  jmx-kafka-a-02:
+    image: "sscaling/jmx-prometheus-exporter"
+    ports:
+      - "5557:5556"
+    environment:
+      CONFIG_YML : "/etc/jmx_exporter/config.yml"
+      JVM_OPTS: -Xmx128M
+    volumes:
+      - ./etc/jmx_exporter/config_kafka02.yml:/etc/jmx_exporter/config.yml
+    container_name: jmx-kafka-a-02
+    hostname: jmx-kafka-a-02
+    depends_on:
+      - kafka-a-02
+
+  jmx-kafka-a-03:
+    image: "sscaling/jmx-prometheus-exporter"
+    ports:
+      - "5558:5556"
+    environment:
+      CONFIG_YML : "/etc/jmx_exporter/config.yml"
+      JVM_OPTS: -Xmx128M
+    volumes:
+      - ./etc/jmx_exporter/config_kafka03.yml:/etc/jmx_exporter/config.yml
+    container_name: jmx-kafka-a-03
+    hostname: jmx-kafka-a-03
+    depends_on:
+      - kafka-a-03
+
+  zoonavigator-a-01:
+    image: elkozmon/zoonavigator:1.1.2
+    container_name: zoonavigator-a-01
+    hostname: zoonavigator-a-01
+    ports:
+      - "8000:8000"
+    environment:
+      HTTP_PORT: 8000
+      AUTO_CONNECT_CONNECTION_STRING: zookeeper-a-01:12181,zookeeper-a-03:22181,zookeeper-a-03:32181
+    depends_on:
+      - zookeeper-a-01
+      - zookeeper-a-02
+      - zookeeper-a-03
 
