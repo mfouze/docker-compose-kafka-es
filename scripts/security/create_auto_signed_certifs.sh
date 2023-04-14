@@ -5,7 +5,7 @@ rm -f *.crt *.csr *_creds *.jks *.srl *.key *.pem *.der *.p12 *.log
 # Generate CA key
 openssl req -new -x509 -keyout snakeoil-ca-1.key -out snakeoil-ca-1.crt -days 365 -subj '/CN=ca1.test.confluent.io/OU=TEST/O=CONFLUENT/L=PARIS/ST=FR/C=EU' -passin pass:confluent -passout pass:confluent
 
-users=(kafka-a-01 kafka-a-02 kafka-a-03 zook-a-01 zook-a-02 zook-a-03 mds)
+users=(kafka-a-01 kafka-a-02 kafka-a-03 zook-a-01 zook-a-02 zook-a-03 kafka-ui-a-01 mds)
 echo "Creating certificates"
 for user in "${users[@]}"; do
   i=${user//-/_}
