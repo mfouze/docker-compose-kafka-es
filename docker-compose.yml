@@ -553,21 +553,17 @@ services:
     image: provectuslabs/kafka-ui:v0.4.0
     container_name: kafka-ui-a-01
     hostname: kafka-ui-a-01
-    #    depends_on:
-    #      - kafka-a-01
-    #      - kafka-a-02
-    #      - kafka-a-03
-    #      - zook-a-01
-    #      - zook-a-02
-    #      - zook-a-03
-    #      - connect-a-01
-    #      - sr-a-01
+    depends_on:
+      - kafka-a-01
+      - kafka-a-02
+      - kafka-a-03
+      - zook-a-01
     ports:
       - "8080:8080"
     environment:
       KAFKA_CLUSTERS_0_NAME: kafka
-      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka-a-01:9092,kafka-a-02:9093,kafka-a-03:9094
-      KAFKA_CLUSTERS_0_ZOOKEEPER: "zook-a-01:2181,zook-a-03:2182,zook-a-03:2183"
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka-a-01:9091,kafka-a-02:9092,kafka-a-03:9093
+      KAFKA_CLUSTERS_0_ZOOKEEPER: "zook-a-01:2181"
       KAFKA_CLUSTERS_0_JMXPORT: 9991
       KAFKA_CLUSTERS_0_SCHEMAREGISTRY: http://sr-a-01:8081
       KAFKA_CLUSTERS_0_KAFKACONNECT_0_NAME: connect
