@@ -1,0 +1,6 @@
+dn: cn=GRDF_KAFKA_ADMINS,ou=groups,{{ LDAP_BASE_DN }}
+objectClass: top
+objectClass: posixGroup
+cn: GRDF_KAFKA_ADMINS
+gidNumber: 5002
+

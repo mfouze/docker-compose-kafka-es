@@ -1,0 +1,6 @@
+dn: cn=GRDF_KAFKA_DEVELOPERS,ou=groups,{{ LDAP_BASE_DN }}
+objectClass: top
+objectClass: posixGroup
+cn: GRDF_KAFKA_DEVELOPERS
+gidNumber: 5000
+

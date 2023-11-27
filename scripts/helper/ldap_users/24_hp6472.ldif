@@ -1,0 +1,15 @@
+dn: cn=hp6472,ou=users,{{ LDAP_BASE_DN }}
+objectClass: inetOrgPerson
+objectClass: posixAccount
+objectClass: shadowAccount
+uid: hp6472
+sn: hp6472
+givenName: hp6472
+cn: hp6472
+displayName: hp6472
+uidNumber: 10003
+gidNumber: 5002
+userPassword: hp6472-secret
+gecos: hp6472
+loginShell: /bin/bash
+homeDirectory: /home/hp6472
