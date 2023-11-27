@@ -1,0 +1,25 @@
+{
+  "name": "students-connector",
+  "config": {
+    "connector.class": "io.debezium.connector.postgresql.PostgresConnector",
+    "tasks.max": "1",
+    "key.converter": "org.apache.kafka.connect.storage.StringConverter",
+    "key.converter.schemas.enable": "false",
+    "value.converter": "org.apache.kafka.connect.json.JsonConverter",
+    "value.converter.schemas.enable": "false",
+    "database.hostname": "postgres-a-01",
+    "database.port": "5432",
+    "database.user": "postgres",
+    "database.password": "postgres",
+    "database.dbname" : "stats_db",
+    "database.server.name": "postgres-a-01",
+    "schema.include": "public",
+    "topic.prefix": "students-topic",
+    "plugin.name": "pgoutput",
+    "slot.name": "students",
+    "slot.drop.on.stop": "true",
+    "transforms": "extractInt",
+    "transforms.extractInt.type": "org.apache.kafka.connect.transforms.ExtractField$Key",
+    "transforms.extractInt.field": "student_id"
+  }
+}
