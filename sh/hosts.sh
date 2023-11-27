@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Noms des conteneurs Docker Kafka
-containers=("kafka-a-01" "kafka-a-02" "kafka-a-03" "zookeeper-a-01" "zookeeper-a-02" "zookeeper-a-03")
+containers=("kafka-a-01" "kafka-a-02" "kafka-a-03" "zookeeper-a-01" "connect-a-01")
 
 # Fichier hosts
 hosts_file="/etc/hosts"

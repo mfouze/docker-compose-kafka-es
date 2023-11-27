@@ -1,51 +1,31 @@
-version: '3'
-services:
-  kafka-a-01:
-    image: confluentinc/cp-kafka:7.3.3
-    hostname: kafka-a-01
-    container_name: kafka-a-01
-    ports:
-      - "9091:9091"
-    environment:
-      KAFKA_ADVERTISED_LISTENERS: LISTENER_DOCKER_INTERNAL://kafka-a-01:19091,LISTENER_DOCKER_EXTERNAL://${DOCKER_HOST_IP:-127.0.0.1}:9091
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: LISTENER_DOCKER_INTERNAL:PLAINTEXT,LISTENER_DOCKER_EXTERNAL:PLAINTEXT
-      KAFKA_INTER_BROKER_LISTENER_NAME: LISTENER_DOCKER_INTERNAL
-      KAFKA_ZOOKEEPER_CONNECT: "zookeeper-a-01:2181"
-      KAFKA_BROKER_ID: 1
-      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-    depends_on:
-      - zookeeper-a-01
+version: '2'
 
-  kafka-a-02:
-    image: confluentinc/cp-kafka:7.3.3
-    hostname: kafka-a-02
-    container_name: kafka-a-02
-    ports:
-      - "9092:9092"
+services:
+  akhq-a-01:
+    image: tchiotludo/akhq
+    restart: unless-stopped
+    container_name: akhq-a-01
+    hostname: akhq-a-01
     environment:
-      KAFKA_ADVERTISED_LISTENERS: LISTENER_DOCKER_INTERNAL://kafka-a-02:19092,LISTENER_DOCKER_EXTERNAL://${DOCKER_HOST_IP:-127.0.0.1}:9092
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: LISTENER_DOCKER_INTERNAL:PLAINTEXT,LISTENER_DOCKER_EXTERNAL:PLAINTEXT
-      KAFKA_INTER_BROKER_LISTENER_NAME: LISTENER_DOCKER_INTERNAL
-      KAFKA_ZOOKEEPER_CONNECT: zookeeper-a-01:2181
-      KAFKA_BROKER_ID: 2
-    depends_on:
-      - zookeeper-a-01
-  
-  kafka-a-03:
-    image: confluentinc/cp-kafka:7.3.3
-    hostname: kafka-a-03
-    container_name: kafka-a-03
+      AKHQ_CONFIGURATION: |
+        akhq:
+          connections:
+            docker-kafka-server:
+              properties:
+                bootstrap.servers: "kafka-a-01:9091"
+              schema-registry:
+                url: "http://sr-a-01:8081"
+              connect:
+                - name: "connect-a-01"
+                  url: "http://connect-a-01:8083"
     ports:
-      - "9093:9093"
-    environment:
-      KAFKA_ADVERTISED_LISTENERS: LISTENER_DOCKER_INTERNAL://kafka-a-03:19093,LISTENER_DOCKER_EXTERNAL://${DOCKER_HOST_IP:-127.0.0.1}:9093
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: LISTENER_DOCKER_INTERNAL:PLAINTEXT,LISTENER_DOCKER_EXTERNAL:PLAINTEXT
-      KAFKA_INTER_BROKER_LISTENER_NAME: LISTENER_DOCKER_INTERNAL
-      KAFKA_ZOOKEEPER_CONNECT: "zookeeper-a-01:2181"
-      KAFKA_BROKER_ID: 3
-      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      - 8080:8080
     depends_on:
+      - kafka-a-01
+      - kafka-a-02
+      - kafka-a-03
       - zookeeper-a-01
+      - connect-a-01
 
   zookeeper-a-01:
     image: zookeeper:3.4.9
@@ -58,6 +38,70 @@ services:
       ZOO_PORT: 2181
       ZOO_SERVERS: server.1=zookeeper-a-01:2888:3888
 
+  kafka-a-01:
+    image: confluentinc/cp-kafka:7.3.3
+    hostname: kafka-a-01
+    container_name: kafka-a-01
+    ports:
+      - "9091:9091"
+    environment:
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka-a-01:9091
+      #KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: LISTENER_DOCKER_INTERNAL:PLAINTEXT,LISTENER_DOCKER_EXTERNAL:PLAINTEXT
+      #KAFKA_INTER_BROKER_LISTENER_NAME: LISTENER_DOCKER_INTERNAL
+      KAFKA_ZOOKEEPER_CONNECT: "zookeeper-a-01:2181"
+      KAFKA_BROKER_ID: 1
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 3
+      KAFKA_DELETE_TOPIC_ENABLE: "true"
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+      KAFKA_SCHEMA_REGISTRY_URL: "sr-a-01:8081"
+      KAFKA_JMX_PORT: 9991
+    depends_on:
+      - zookeeper-a-01
+
+  kafka-a-02:
+    image: confluentinc/cp-kafka:7.3.3
+    hostname: kafka-a-02
+    container_name: kafka-a-02
+    ports:
+      - "9092:9092"
+      - "9992:9992"
+      - "19092:19092"
+    environment:
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka-a-02:9092
+      #KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: LISTENER_DOCKER_INTERNAL:PLAINTEXT,LISTENER_DOCKER_EXTERNAL:PLAINTEXT
+      #KAFKA_INTER_BROKER_LISTENER_NAME: LISTENER_DOCKER_INTERNAL
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper-a-01:2181
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 3
+      KAFKA_BROKER_ID: 2
+      KAFKA_DELETE_TOPIC_ENABLE: "true"
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+      KAFKA_SCHEMA_REGISTRY_URL: "sr-a-01:8081"
+      KAFKA_JMX_PORT: 9992
+    depends_on:
+      - zookeeper-a-01
+  
+  kafka-a-03:
+    image: confluentinc/cp-kafka:7.3.3
+    hostname: kafka-a-03
+    container_name: kafka-a-03
+    ports:
+      - "9093:9093"
+      - "9993:9993"
+      - "19093:19093"
+    environment:
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka-a-03:9093
+      #KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: LISTENER_DOCKER_INTERNAL:PLAINTEXT,LISTENER_DOCKER_EXTERNAL:PLAINTEXT
+      #KAFKA_INTER_BROKER_LISTENER_NAME: LISTENER_DOCKER_INTERNAL
+      KAFKA_ZOOKEEPER_CONNECT: "zookeeper-a-01:2181"
+      KAFKA_BROKER_ID: 3
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 3
+      KAFKA_DELETE_TOPIC_ENABLE: "true"
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+      KAFKA_SCHEMA_REGISTRY_URL: "sr-a-01:8081"
+      KAFKA_JMX_PORT: 9993
+    depends_on:
+      - zookeeper-a-01
+
   kafdrop-a-01:
     image: obsidiandynamics/kafdrop
     container_name: kafdrop-a-01
@@ -66,11 +110,13 @@ services:
     ports:
       - "9000:9000"
     environment:
-      KAFKA_BROKERCONNECT: "kafka-a-01:19091"
-    depends_on:
-      - kafka-a-01
-      - kafka-a-02
-      - kafka-a-03
+      KAFKA_BROKERCONNECT: "kafka-a-01:9091"
+#    depends_on:
+#      - kafka-a-01
+#      - kafka-a-02
+#      - kafka-a-03
+#      - zookeeper-a-01
+#      - connect-a-01
 
   postgres-a-01:
     image: postgres:latest
@@ -96,6 +142,11 @@ services:
     image: confluentinc/cp-kafka-connect:7.3.3
     container_name: connect-a-01
     hostname: connect-a-01
+    restart: always
+    healthcheck:
+      interval: 10s
+      retries: 20
+      test: curl --insecure http://connect-a-01:8083/ --output /dev/null || exit 1
     command:
       - bash
       - -c
@@ -105,7 +156,8 @@ services:
         #  sure that this path is added to the plugin.path in the environment variables
         confluent-hub  install --no-prompt confluentinc/kafka-connect-elasticsearch:13.1.2
         confluent-hub install --no-prompt debezium/debezium-connector-postgresql:2.2.1   
-        confluent-hub install confluentinc/kafka-connect-datagen:0.6.3
+        confluent-hub install --no-prompt confluentinc/kafka-connect-datagen:0.6.3 
+        confluent-hub install --no-prompt confluentinc/kafka-connect-jdbc:10.7.4
         # Launch the Kafka Connect worker
         /etc/confluent/docker/run &
         # Don't exit
@@ -115,15 +167,19 @@ services:
       - kafka-a-01
       - kafka-a-02
       - kafka-a-03
+      - postgres-a-01
     ports:
       - "8083:8083"
     environment:
-      CONNECT_BOOTSTRAP_SERVERS: "kafka-a-01:9091,kafka-a-02:9092,kafka-a-03:9093"
+      CONNECT_BOOTSTRAP_SERVERS: kafka-a-01:9091
+      #CONNECT_BOOTSTRAP_SERVERS: kafka-a-01:9091
       CONNECT_REST_PORT: 8083
+      CONNECT_LISTENERS: "http://0.0.0.0:8083"
       CONNECT_GROUP_ID: connect-group
       CONNECT_CONFIG_STORAGE_TOPIC: __connect-configs
       CONNECT_OFFSET_STORAGE_TOPIC: __connect-offsets
       CONNECT_STATUS_STORAGE_TOPIC: __connect-status
+      CONNECT_CONNECTOR_CLIENT_CONFIG_OVERRIDE_POLICY: 'All'
       CONNECT_KEY_CONVERTER: "org.apache.kafka.connect.json.JsonConverter"
       CONNECT_KEY_CONVERTER_SCHEMA_REGISTRY_URL: 'http://sr-a-01:8081'
       CONNECT_VALUE_CONVERTER: "org.apache.kafka.connect.json.JsonConverter"
@@ -133,11 +189,10 @@ services:
       CONNECT_REST_ADVERTISED_HOST_NAME: "connect-a-01"
       CONNECT_LOG4J_ROOT_LOGLEVEL: "INFO"
       CONNECT_LOG4J_LOGGERS: "org.apache.kafka.connect.runtime.rest=WARN,org.reflections=ERROR"
-      CONNECT_CONFIG_STORAGE_REPLICATION_FACTOR: "3"
-      CONNECT_OFFSET_STORAGE_REPLICATION_FACTOR: "3"
-      CONNECT_STATUS_STORAGE_REPLICATION_FACTOR: "3"
+      CONNECT_CONFIG_STORAGE_REPLICATION_FACTOR: 1
+      CONNECT_OFFSET_STORAGE_REPLICATION_FACTOR: 1
+      CONNECT_STATUS_STORAGE_REPLICATION_FACTOR: 1
       CONNECT_PLUGIN_PATH: '/usr/share/java,/usr/share/confluent-hub-components/'
-      ENABLE_DEBEZIUM_SCRIPTING: 'true'
 
   sr-a-01:
     image: confluentinc/cp-schema-registry:7.3.3
@@ -150,7 +205,7 @@ services:
       - kafka-a-02
       - kafka-a-03
     environment:
-      SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: "kafka-a-01:9091,kafka-a-02:9092,kafka-a-03:9093"
+      SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: "kafka-a-01:19091,kafka-a-02:19092,kafka-a-03:19093"
       SCHEMA_REGISTRY_INTER_INSTANCE_PROTOCOL: http
       SCHEMA_REGISTRY_HOST_NAME: sr-a-01
       SCHEMA_REGISTRY_LISTENERS: "http://0.0.0.0:8081"

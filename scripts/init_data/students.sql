@@ -1,5 +1,5 @@
-CREATE TABLE "students_clean" (
-  "student_id" bigint,
+CREATE TABLE "students" (
+  "student_id" bigint primary key ,
   "school" text,
   "sex" text,
   "age" bigint,
@@ -35,7 +35,7 @@ CREATE TABLE "students_clean" (
   "final_grade" bigint
 );
 
-INSERT INTO "students_clean" VALUES
+INSERT INTO "students" VALUES
 (1,'GP','F',18,'Urban','Greater than 3','Apart','higher education','higher education','at_home','teacher','course','mother','15 to 30 min.','2 to 5 hours',0,'yes','no','no','no','yes','yes','no','no',4,3,4,1,1,3,4,0,11,11),
 (2,'GP','F',17,'Urban','Greater than 3','Living together','primary education (4th grade)','primary education (4th grade)','at_home','other','course','father','<15 min.','2 to 5 hours',0,'no','yes','no','no','no','yes','yes','no',5,3,3,1,1,3,2,9,11,11),
 (3,'GP','F',15,'Urban','Less than or equal to 3','Living together','primary education (4th grade)','primary education (4th grade)','at_home','other','other','mother','<15 min.','2 to 5 hours',0,'yes','no','no','no','yes','yes','yes','no',4,3,2,2,3,3,6,12,13,12),
