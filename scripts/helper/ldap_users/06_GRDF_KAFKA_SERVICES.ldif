@@ -1,6 +1,0 @@
-dn: cn=GRDF_KAFKA_SERVICES,ou=groups,{{ LDAP_BASE_DN }}
-objectClass: top
-objectClass: posixGroup
-cn: GRDF_KAFKA_SERVICES
-gidNumber: 5003
-
