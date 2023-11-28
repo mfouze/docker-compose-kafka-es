@@ -1,5 +1,5 @@
 {
-  "name": "students-connector",
+  "name": "students-connector-debezium-source1",
   "config": {
     "connector.class": "io.debezium.connector.postgresql.PostgresConnector",
     "tasks.max": "1",
@@ -14,7 +14,7 @@
     "database.dbname" : "stats_db",
     "database.server.name": "postgres-a-01",
     "schema.include": "public",
-    "topic.prefix": "students-topic",
+    "topic.prefix": "students.string.topic",
     "plugin.name": "pgoutput",
     "slot.name": "students",
     "slot.drop.on.stop": "true",

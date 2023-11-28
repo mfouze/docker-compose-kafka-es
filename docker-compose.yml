@@ -12,7 +12,7 @@ services:
           connections:
             docker-kafka-server:
               properties:
-                bootstrap.servers: "kafka-a-01:9091"
+                bootstrap.servers: "kafka-a-01:19091"
               schema-registry:
                 url: "http://sr-a-01:8081"
               connect:
@@ -28,15 +28,14 @@ services:
       - connect-a-01
 
   zookeeper-a-01:
-    image: zookeeper:3.4.9
+    image: confluentinc/cp-zookeeper:7.3.3
     hostname: zookeeper-a-01
     container_name: zookeeper-a-01
     ports:
       - "2181:2181"
     environment:
-      ZOO_MY_ID: 1
-      ZOO_PORT: 2181
-      ZOO_SERVERS: server.1=zookeeper-a-01:2888:3888
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
 
   kafka-a-01:
     image: confluentinc/cp-kafka:7.3.3
@@ -44,13 +43,18 @@ services:
     container_name: kafka-a-01
     ports:
       - "9091:9091"
+      - "19091:19091"
+      - "9991:9991"
     environment:
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka-a-01:9091
-      #KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: LISTENER_DOCKER_INTERNAL:PLAINTEXT,LISTENER_DOCKER_EXTERNAL:PLAINTEXT
-      #KAFKA_INTER_BROKER_LISTENER_NAME: LISTENER_DOCKER_INTERNAL
-      KAFKA_ZOOKEEPER_CONNECT: "zookeeper-a-01:2181"
       KAFKA_BROKER_ID: 1
-      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 3
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka-a-01:19091,PLAINTEXT_HOST://localhost:9091
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_JMX_HOSTNAME: localhost
+      KAFKA_ZOOKEEPER_CONNECT: "zookeeper-a-01:2181"
       KAFKA_DELETE_TOPIC_ENABLE: "true"
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
       KAFKA_SCHEMA_REGISTRY_URL: "sr-a-01:8081"
@@ -67,12 +71,15 @@ services:
       - "9992:9992"
       - "19092:19092"
     environment:
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka-a-02:9092
-      #KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: LISTENER_DOCKER_INTERNAL:PLAINTEXT,LISTENER_DOCKER_EXTERNAL:PLAINTEXT
-      #KAFKA_INTER_BROKER_LISTENER_NAME: LISTENER_DOCKER_INTERNAL
-      KAFKA_ZOOKEEPER_CONNECT: zookeeper-a-01:2181
-      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 3
       KAFKA_BROKER_ID: 2
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka-a-02:19092,PLAINTEXT_HOST://localhost:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_JMX_HOSTNAME: localhost
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper-a-01:2181
       KAFKA_DELETE_TOPIC_ENABLE: "true"
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
       KAFKA_SCHEMA_REGISTRY_URL: "sr-a-01:8081"
@@ -89,34 +96,21 @@ services:
       - "9993:9993"
       - "19093:19093"
     environment:
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka-a-03:9093
-      #KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: LISTENER_DOCKER_INTERNAL:PLAINTEXT,LISTENER_DOCKER_EXTERNAL:PLAINTEXT
-      #KAFKA_INTER_BROKER_LISTENER_NAME: LISTENER_DOCKER_INTERNAL
-      KAFKA_ZOOKEEPER_CONNECT: "zookeeper-a-01:2181"
       KAFKA_BROKER_ID: 3
-      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 3
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka-a-03:19093,PLAINTEXT_HOST://localhost:9093
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_JMX_HOSTNAME: localhost
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper-a-01:2181
       KAFKA_DELETE_TOPIC_ENABLE: "true"
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
       KAFKA_SCHEMA_REGISTRY_URL: "sr-a-01:8081"
       KAFKA_JMX_PORT: 9993
     depends_on:
       - zookeeper-a-01
-
-  kafdrop-a-01:
-    image: obsidiandynamics/kafdrop
-    container_name: kafdrop-a-01
-    hostname: kafdrop-a-01
-    restart: "no"
-    ports:
-      - "9000:9000"
-    environment:
-      KAFKA_BROKERCONNECT: "kafka-a-01:9091"
-#    depends_on:
-#      - kafka-a-01
-#      - kafka-a-02
-#      - kafka-a-03
-#      - zookeeper-a-01
-#      - connect-a-01
 
   postgres-a-01:
     image: postgres:latest
@@ -171,7 +165,7 @@ services:
     ports:
       - "8083:8083"
     environment:
-      CONNECT_BOOTSTRAP_SERVERS: kafka-a-01:9091
+      CONNECT_BOOTSTRAP_SERVERS: kafka-a-01:19091
       #CONNECT_BOOTSTRAP_SERVERS: kafka-a-01:9091
       CONNECT_REST_PORT: 8083
       CONNECT_LISTENERS: "http://0.0.0.0:8083"

@@ -15,4 +15,4 @@ curl -XPOST -H 'Content-type:application/json''localhost:8083/connectors' -d '{
 
 
 Lancer un connecteur à partir d'un fichier :
-`curl -i -X POST -H "Accept:application/json" -H "Content-Type:application/json" kafka-connect:8083/connectors/ -d /conf/mysql_config.json`
+`url -i -X POST -H "Accept:application/json" -H  "Content-Type:application/json" http://localhost:8083/connectors/ -d @connect_datagen_rating.json`
