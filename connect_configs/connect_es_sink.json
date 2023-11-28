@@ -3,11 +3,14 @@
   "config": {
     "connector.class": "io.confluent.connect.elasticsearch.ElasticsearchSinkConnector",
     "tasks.max": "1",
-    "topics": "logs",
-    "topic.index.map": "logs:logs_index",
-    "connection.url": "http://localhost:9200",
+    "topics": "students.json.topic.public.students",
+    "topic.index.map": "logs:elasticsearch-index",
+    "connection.url": "http://es-a-01:9200",
     "type.name": "true",
     "key.ignore": "true",
-    "schema.ignore": "true"
+    "schema.ignore": "true",
+    "value.converter.schemas.enable": "false",
+    "key.converter": "org.apache.kafka.connect.storage.StringConverter",
+    "value.converter": "org.apache.kafka.connect.json.JsonConverter"
   }
 }
