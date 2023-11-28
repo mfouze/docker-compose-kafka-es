@@ -1,5 +1,5 @@
 {
-  "name": "students-connector-debezium-source2",
+  "name": "students-connector-debezium-source",
   "config": {
     "connector.class": "io.debezium.connector.postgresql.PostgresConnector",
     "tasks.max": "1",
@@ -15,10 +15,11 @@
     "database.server.name": "postgres-a-01",
     "schema.include": "public",
     "topic.prefix": "students.json.topic",
+    "table.include.list": "public.students",
     "plugin.name": "pgoutput",
     "slot.name": "students",
     "slot.drop.on.stop": "true",
-    "publication.name": "cdc_debezium_tp",
+    "publication.name": "cdc_debezium_students_tp",
     "transforms": "unwrap,extractInt",
     "transforms.extractInt.type": "org.apache.kafka.connect.transforms.ExtractField$Key",
     "transforms.extractInt.field": "student_id",

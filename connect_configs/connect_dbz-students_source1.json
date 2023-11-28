@@ -13,6 +13,7 @@
     "database.password": "postgres",
     "database.dbname" : "stats_db",
     "database.server.name": "postgres-a-01",
+    "table.include.list": "public.students",
     "schema.include": "public",
     "topic.prefix": "students.string.topic",
     "plugin.name": "pgoutput",

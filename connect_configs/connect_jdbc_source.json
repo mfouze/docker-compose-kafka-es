@@ -1,5 +1,5 @@
 {
-  "name": "jdbc_source_connector_pgsql2",
+  "name": "jdbc_source_connector_pgsql",
   "config": {
     "connector.class": "io.confluent.connect.jdbc.JdbcSourceConnector",
     "connection.url": "jdbc:postgresql://postgres-a-01:5432/stats_db",

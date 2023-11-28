@@ -1,0 +1,31 @@
+{
+  "name": "teachers-connector-debezium-source",
+  "config": {
+    "connector.class": "io.debezium.connector.postgresql.PostgresConnector",
+    "tasks.max": "1",
+    "key.converter": "org.apache.kafka.connect.json.JsonConverter",
+    "key.converter.schemas.enable": "false",
+    "value.converter": "org.apache.kafka.connect.json.JsonConverter",
+    "value.converter.schemas.enable": "false",
+    "database.hostname": "postgres-a-01",
+    "database.port": "5432",
+    "database.user": "postgres",
+    "database.password": "postgres",
+    "database.dbname" : "stats_db",
+    "database.server.name": "postgres-a-01",
+    "schema.include": "public",
+    "topic.prefix": "teachers.json.topic",
+    "plugin.name": "pgoutput",
+    "slot.name": "teachers",
+    "slot.drop.on.stop": "true",
+    "table.include.list": "public.teachers",
+    "publication.name": "cdc_debezium_teachers",
+    "transforms": "extractField,unwrap",
+    "transforms.extractField.type": "org.apache.kafka.connect.transforms.ExtractField$Key",
+    "transforms.extractField.field": "id",
+    "transforms.unwrap.drop.tombstones": "false",
+    "transforms.unwrap.type": "io.debezium.transforms.ExtractNewRecordState",
+    "transforms.unwrap.add.headers": "db,op,table,lsn,source.ts_ms",
+    "publication.autocreate.mode": "filtered"
+  }
+}
