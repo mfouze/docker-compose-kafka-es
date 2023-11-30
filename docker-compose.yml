@@ -248,7 +248,7 @@ services:
     restart: unless-stopped
 
   ksqldb-a-01:
-    image: confluentinc/ksqldb-server:0.29.0
+    image: confluentinc/cp-ksqldb-server:7.3.3
     hostname: ksqldb-a-01
     container_name: ksqldb-a-01
     depends_on:
@@ -259,8 +259,25 @@ services:
     ports:
       - "8088:8088"
     environment:
-      KSQL_LISTENERS: http://0.0.0.0:8088
-      KSQL_BOOTSTRAP_SERVERS: kafka-a-01:9091,kafka-a-02:9092,kafka-a-03:9093
-      KSQL_KSQL_SCHEMA_REGISTRY_URL: http://sr-a-01:8081
-      KSQL_KSQL_LOGGING_PROCESSING_STREAM_AUTO_CREATE: "true"
-      KSQL_KSQL_LOGGING_PROCESSING_TOPIC_AUTO_CREATE: "true"
+      KSQL_CONFIG_DIR: "/etc/ksql"
+      KSQL_BOOTSTRAP_SERVERS: "kafka-a-01:19091,kafka-a-02:29091,kafka-a-03:39091"
+      KSQL_HOST_NAME: ksqldb-server
+      KSQL_LISTENERS: "http://0.0.0.0:8088"
+      KSQL_CACHE_MAX_BYTES_BUFFERING: 0
+      KSQL_KSQL_SCHEMA_REGISTRY_URL: "http://sr-a-01:8081"
+      KSQL_KSQL_CONNECT_URL: "http://connect-a-01:8083"
+      KSQL_KSQL_LOGGING_PROCESSING_TOPIC_REPLICATION_FACTOR: 1
+      KSQL_KSQL_LOGGING_PROCESSING_TOPIC_AUTO_CREATE: 'true'
+      KSQL_KSQL_LOGGING_PROCESSING_STREAM_AUTO_CREATE: 'true'
+
+  ksqldb-cli:
+    image: confluentinc/cp-ksqldb-cli:7.3.3
+    container_name: ksqldb-cli
+    depends_on:
+      - ksqldb-a-01
+      - kafka-a-01
+      - kafka-a-02
+      - kafka-a-03
+      - sr-a-01
+    entrypoint: /bin/sh
+    tty: true

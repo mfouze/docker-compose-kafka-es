@@ -2,7 +2,7 @@
   "name": "second_es_sink",
   "config": {
     "connector.class": "io.confluent.connect.elasticsearch.ElasticsearchSinkConnector",
-    "tasks.max": "1",
+    "tasks.max": "10",
     "topics": "students.json.topic.public.students",
     "topic.index.map": "logs:elasticsearch-index",
     "connection.url": "http://es-a-01:9200",

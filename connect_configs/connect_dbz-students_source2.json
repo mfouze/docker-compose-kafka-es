@@ -1,5 +1,5 @@
 {
-  "name": "students-connector-debezium-source",
+  "name": "students-connector-debezium-source2",
   "config": {
     "connector.class": "io.debezium.connector.postgresql.PostgresConnector",
     "tasks.max": "1",
