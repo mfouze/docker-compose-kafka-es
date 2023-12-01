@@ -281,3 +281,76 @@ services:
       - sr-a-01
     entrypoint: /bin/sh
     tty: true
+
+  grafana-a-01:
+    image: "grafana/grafana:9.1.0-ubuntu"
+    container_name: grafana-a-01
+    hostname: grafana-a-01
+    ports:
+      - "3000:3000"
+    environment:
+      GF_PATHS_DATA : /var/lib/grafana
+      GF_SECURITY_ADMIN_PASSWORD: kafka
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning
+      - ./grafana/dashboards:/var/lib/grafana/dashboards
+    depends_on:
+      - prometheus-a-01
+      - jmx-kafka-a-01
+      - jmx-kafka-a-02
+      - jmx-kafka-a-03
+      - kafka-a-01
+      - kafka-a-02
+      - kafka-a-03
+
+  prometheus-a-01:
+    image: "prom/prometheus:v2.34.0"
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./etc/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+    command: "--config.file=/etc/prometheus/prometheus.yml"
+    container_name: prometheus-a-01
+    hostname: prometheus-a-01
+
+  jmx-kafka-a-01:
+    image: "sscaling/jmx-prometheus-exporter"
+    ports:
+      - "5556:5556"
+    environment:
+      CONFIG_YML : "/etc/jmx_exporter/config.yml"
+      JVM_OPTS: -Xmx128M
+    volumes:
+      - ./etc/jmx_exporter/config_kafka01.yml:/etc/jmx_exporter/config.yml
+    container_name: jmx-kafka-a-01
+    hostname: jmx-kafka-a-01
+    depends_on:
+      - kafka-a-01
+
+  jmx-kafka-a-02:
+    image: "sscaling/jmx-prometheus-exporter"
+    ports:
+      - "5557:5556"
+    environment:
+      CONFIG_YML : "/etc/jmx_exporter/config.yml"
+      JVM_OPTS: -Xmx128M
+    volumes:
+      - ./etc/jmx_exporter/config_kafka02.yml:/etc/jmx_exporter/config.yml
+    container_name: jmx-kafka-a-02
+    hostname: jmx-kafka-a-02
+    depends_on:
+      - kafka-a-02
+
+  jmx-kafka-a-03:
+    image: "sscaling/jmx-prometheus-exporter"
+    ports:
+      - "5558:5556"
+    environment:
+      CONFIG_YML : "/etc/jmx_exporter/config.yml"
+      JVM_OPTS: -Xmx128M
+    volumes:
+      - ./etc/jmx_exporter/config_kafka03.yml:/etc/jmx_exporter/config.yml
+    container_name: jmx-kafka-a-03
+    hostname: jmx-kafka-a-03
+    depends_on:
+      - kafka-a-03
